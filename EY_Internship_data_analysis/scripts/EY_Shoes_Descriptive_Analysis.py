@@ -2,12 +2,16 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from matplotlib.backends.backend_pdf import PdfPages
+import os
+from datetime import datetime
 
 sns.set_theme(style="whitegrid", palette="colorblind", font_scale=1.2)
 
-shoes_merged = pd.read_csv(r"C:\EY_Data\final_shoes_merged.csv", parse_dates=['date'])
-shoes_dim = pd.read_csv(r"C:\EY_Data\shoes_dim.csv")
+shoes_merged = pd.read_csv(r"C:\UW\Github\coding_portfolio\EY_Internship_data_analysis\data\final_shoes_merged.csv", parse_dates=['date'])
+shoes_dim = pd.read_csv(r"C:\UW\Github\coding_portfolio\EY_Internship_data_analysis\data\shoes_dim.csv")
 id_name_map = shoes_dim.set_index('id')['name'].to_dict()
+
 
 #DESCRIPTIVE ANALYSIS BY SHOE MODEL
 print("DESCRIPTIVE ANALYSIS BY SHOE MODEL")
@@ -139,113 +143,151 @@ print(f"Mean: {active_prices.mean():.2f} EUR")
 print(f"Median: {active_prices.median():.2f} EUR")
 print("")
 
+# ==============================
+# PDF Report Generation
+# ==============================
 
-####################################################################################################
-# NEW AND IMPROVED VISUALIZATION SECTION
-####################################################################################################
+# Ensure results folder exists
+results_dir = r"C:\UW\Github\coding_portfolio\EY_Internship_data_analysis\results"
+os.makedirs(results_dir, exist_ok=True)
 
-# Prepare the figure for a 3x3 grid of plots
-fig, axes = plt.subplots(3, 3, figsize=(20, 18)) # Set a larger figure size for better readability
-fig.suptitle('Shoe Data Analysis: Key Insights Visualization', fontsize=22, y=1.02, weight='bold') # Main title for the entire grid
-axes = axes.flatten() # Flatten the 2D array of axes for easy iteration
+# Auto timestamp filename
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+pdf_path = os.path.join(results_dir, f"shoe_analysis_report_{timestamp}.pdf")
 
-# --- Question 1: Top 5 Most Available Shoe Models ---
-# Visualization: Horizontal Bar Plot for clear ranking
-sns.barplot(x='total_availability', y='name', data=top_availability, ax=axes[0], palette='Blues_d')
-axes[0].set_title("Question 1: Top 5 Most Available Models", fontsize=14, weight='bold')
-axes[0].set_xlabel("Total Availability", fontsize=12)
-axes[0].set_ylabel("Shoe Model Name", fontsize=12)
-axes[0].tick_params(axis='y', labelsize=10) # Adjust label size for long names
+# Helper: truncate names
+def truncate_name(name, length=30):
+    return name if len(name) <= length else name[:length-3] + "..."
 
-# --- Question 2: Bottom 5 Models by Non-Zero Availability ---
-# Visualization: Horizontal Bar Plot to show the lowest availability models
-sns.barplot(x='total_availability', y='name', data=bottom_availability, ax=axes[1], palette='Reds_d')
-axes[1].set_title("Question 2: Bottom 5 Non-Zero Availability Models", fontsize=14, weight='bold')
-axes[1].set_xlabel("Total Availability", fontsize=12)
-axes[1].set_ylabel("Shoe Model Name", fontsize=12)
-axes[1].tick_params(axis='y', labelsize=10)
+# Apply truncation
+top_availability['short_name']    = top_availability['name'].apply(truncate_name)
+bottom_availability['short_name'] = bottom_availability['name'].apply(truncate_name)
+top_sales['short_name']           = top_sales['name'].apply(truncate_name)
 
-# --- Question 3: Top 5 Models by Net Sales (Availability Decrease) ---
-# Visualization: Horizontal Bar Plot to highlight models with highest sales
-sns.barplot(x='net_availability_decrease', y='name', data=top_sales, ax=axes[2], palette='Greens_d')
-axes[2].set_title("Question 3: Top 5 Models by Net Sales", fontsize=14, weight='bold')
-axes[2].set_xlabel("Net Availability Decrease (Sales)", fontsize=12)
-axes[2].set_ylabel("Shoe Model Name", fontsize=12)
-axes[2].tick_params(axis='y', labelsize=10)
+# Write plots into PDF (all pages portrait + fixes for labels/legend)
+with PdfPages(pdf_path) as pdf:
 
-# --- Question 4: Deadstock vs. Active Shoe Models ---
-# Visualization: Bar plot to compare the counts of deadstock vs. active models
-model_status_counts = pd.DataFrame({
-    'Status': ['Deadstock', 'Active'],
-    'Count': [len(deadstock_ids), len(active_ids)]
-})
-sns.barplot(x='Status', y='Count', data=model_status_counts, ax=axes[3], palette='Pastel1')
-axes[3].set_title("Question 4: Deadstock vs. Active Models Count", fontsize=14, weight='bold')
-axes[3].set_xlabel("Model Status", fontsize=12)
-axes[3].set_ylabel("Number of Models", fontsize=12)
-# Add count labels on top of bars for clarity
-for p in axes[3].patches:
-    axes[3].annotate(f'{int(p.get_height())}', (p.get_x() + p.get_width() / 2., p.get_height()),
-                ha='center', va='center', xytext=(0, 5), textcoords='offset points', fontsize=10)
+    # === TITLE PAGE (portrait) ===
+    fig, ax = plt.subplots(figsize=(8.5, 11))
+    ax.axis("off")
+    plt.text(
+        0.5, 0.60,
+        "EY Internship Project:\nExploratory Analysis of Global Shoe Market Trends",
+        fontsize=22, ha="center", va="center", fontweight="bold"
+    )
+    plt.text(0.5, 0.46, "Sashiv Bhatia", fontsize=14, ha="center", va="center")
+    pdf.savefig(fig); plt.close(fig)
 
+    # --- Q1: Top 5 Most Available Models (VERTICAL barplot) ---
+    fig, ax = plt.subplots(figsize=(8.5, 11))
+    sns.barplot(x='short_name', y='total_availability', data=top_availability,
+                palette='Blues_d', ax=ax)
+    ax.set_title("Q1: Top 5 Most Available Models", fontsize=16, fontweight='bold')
+    ax.set_xlabel("Shoe Model (≤30 chars)")
+    ax.set_ylabel("Total Availability")
+    ax.tick_params(axis='x', rotation=45, labelsize=9)
+    plt.subplots_adjust(left=0.15, right=0.96, top=0.90, bottom=0.25)
+    pdf.savefig(fig); plt.close(fig)
 
-# --- Question 5: Sell-Out Rates by Gender ---
-# Visualization: Bar plot to show gender-wise sell-out rates
-sellout_rate_df = sellout_rate.reset_index()
-sellout_rate_df.columns = ['Gender', 'SellOutRate']
-sns.barplot(x='Gender', y='SellOutRate', data=sellout_rate_df, ax=axes[4], palette='coolwarm')
-axes[4].set_title("Question 5: Sell-Out Rates by Gender", fontsize=14, weight='bold')
-axes[4].set_xlabel("Gender", fontsize=12)
-axes[4].set_ylabel("Sell-Out Rate", fontsize=12)
-axes[4].set_ylim(0, sellout_rate_df['SellOutRate'].max() * 1.1) # Adjust y-limit for better visualization
-# Add percentage labels on top of bars
-for p in axes[4].patches:
-    axes[4].annotate(f'{p.get_height():.2%}', (p.get_x() + p.get_width() / 2., p.get_height()),
-                ha='center', va='center', xytext=(0, 5), textcoords='offset points', fontsize=10)
+    # --- Q2: Bottom 5 Non-Zero Availability Models (VERTICAL barplot) ---
+    fig, ax = plt.subplots(figsize=(8.5, 11))
+    sns.barplot(x='short_name', y='total_availability', data=bottom_availability,
+                palette='Reds_d', ax=ax)
+    ax.set_title("Q2: Bottom 5 Non-Zero Availability Models", fontsize=16, fontweight='bold')
+    ax.set_xlabel("Shoe Model (≤30 chars)")
+    ax.set_ylabel("Total Availability")
+    ax.tick_params(axis='x', rotation=45, labelsize=9)
+    plt.subplots_adjust(left=0.15, right=0.96, top=0.90, bottom=0.25)
+    pdf.savefig(fig); plt.close(fig)
 
+    # --- Q3: Top 5 Models by Net Sales (VERTICAL barplot) ---
+    fig, ax = plt.subplots(figsize=(8.5, 11))
+    sns.barplot(x='short_name', y='net_availability_decrease', data=top_sales,
+                palette='Greens_d', ax=ax)
+    ax.set_title("Q3: Top 5 Models by Net Sales", fontsize=16, fontweight='bold')
+    ax.set_xlabel("Shoe Model (≤30 chars)")
+    ax.set_ylabel("Net Availability Decrease (Sales)")
+    ax.tick_params(axis='x', rotation=45, labelsize=9)
+    plt.subplots_adjust(left=0.15, right=0.96, top=0.90, bottom=0.25)
+    pdf.savefig(fig); plt.close(fig)
 
-# --- Question 6: Total Sales by Country ---
-# Visualization: Horizontal Bar Plot for country-wise sales ranking
-top_countries_df = top_countries.reset_index()
-top_countries_df.columns = ['Country', 'TotalSales']
-sns.barplot(x='TotalSales', y='Country', data=top_countries_df, ax=axes[5], palette='Spectral')
-axes[5].set_title("Question 6: Total Sales by Country", fontsize=14, weight='bold')
-axes[5].set_xlabel("Total Sales (Availability Decrease)", fontsize=12)
-axes[5].set_ylabel("Country Code", fontsize=12)
+    # --- Q4: Deadstock vs Active Models (portrait) ---
+    fig, ax = plt.subplots(figsize=(8.5, 11))
+    model_status_counts = pd.DataFrame({'Status': ['Deadstock','Active'],
+                                        'Count':[len(deadstock_ids), len(active_ids)]})
+    sns.barplot(x='Status', y='Count', data=model_status_counts, palette='Pastel1', ax=ax)
+    ax.set_title("Q4: Deadstock vs Active Models Count", fontsize=16, fontweight='bold')
+    ax.set_xlabel("Model Status"); ax.set_ylabel("Number of Models")
+    for p in ax.patches:
+        ax.text(p.get_x()+p.get_width()/2., p.get_height(), f'{int(p.get_height())}',
+                ha='center', va='bottom')
+    plt.subplots_adjust(left=0.12, right=0.96, top=0.90, bottom=0.12)
+    pdf.savefig(fig); plt.close(fig)
 
-# --- Question 7: Sales Volume by Country & Price Segment ---
-# Visualization: Grouped Bar Plot to compare sales across segments within countries
-# Melt the DataFrame to long format for Seaborn's hue parameter
-segment_country_sales_melted = segment_country_sales.reset_index().melt(id_vars='country_code', var_name='price_segment', value_name='sales_volume')
-# Ensure price_segment order is maintained for consistent plotting
-segment_country_sales_melted['price_segment'] = pd.Categorical(segment_country_sales_melted['price_segment'], categories=labels, ordered=True)
+    # --- Q5: Sell-Out Rates by Gender (portrait) ---
+    fig, ax = plt.subplots(figsize=(8.5, 11))
+    sellout_rate_df = sellout_rate.reset_index()
+    sellout_rate_df.columns = ['Gender','SellOutRate']
+    sns.barplot(x='Gender', y='SellOutRate', data=sellout_rate_df, palette='coolwarm', ax=ax)
+    ax.set_title("Q5: Sell-Out Rates by Gender", fontsize=16, fontweight='bold')
+    ax.set_xlabel("Gender"); ax.set_ylabel("Sell-Out Rate")
+    ax.set_ylim(0, sellout_rate_df['SellOutRate'].max() * 1.15)
+    for p in ax.patches:
+        ax.text(p.get_x()+p.get_width()/2., p.get_height(), f'{p.get_height():.2%}',
+                ha='center', va='bottom')
+    plt.subplots_adjust(left=0.12, right=0.96, top=0.90, bottom=0.12)
+    pdf.savefig(fig); plt.close(fig)
 
-sns.barplot(x='country_code', y='sales_volume', hue='price_segment', data=segment_country_sales_melted, ax=axes[6], palette='tab10')
-axes[6].set_title("Question 7: Sales Volume by Country & Price Segment", fontsize=14, weight='bold')
-axes[6].set_xlabel("Country Code", fontsize=12)
-axes[6].set_ylabel("Sales Volume", fontsize=12)
-axes[6].legend(title='Price Segment', bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., fontsize=10, title_fontsize=12) # Move legend outside the plot area
+    # --- Q6: Total Sales by Country (VERTICAL barplot) ---
+    fig, ax = plt.subplots(figsize=(8.5, 11))
+    top_countries_df = top_countries.reset_index()
+    top_countries_df.columns = ['Country','TotalSales']
+    sns.barplot(x='Country', y='TotalSales', data=top_countries_df, palette='Spectral', ax=ax)
+    ax.set_title("Q6: Total Sales by Country", fontsize=16, fontweight='bold')
+    ax.set_xlabel("Country Code"); ax.set_ylabel("Total Sales (Availability Decrease)")
+    ax.tick_params(axis='x', rotation=45, labelsize=9)
+    plt.subplots_adjust(left=0.15, right=0.96, top=0.90, bottom=0.20)
+    pdf.savefig(fig); plt.close(fig)
 
-# --- Question 8: Correlation between Price and Total Sales Volume ---
-# Visualization: Scatter Plot with a Regression Line to show correlation
-sns.regplot(x='avg_price_eur', y='total_sales', data=correlation_df, ax=axes[7], scatter_kws={'alpha':0.6}, line_kws={'color':'red', 'linestyle':'--'})
-axes[7].set_title(f"Question 8: Price vs. Total Sales (Corr: {correlation:.2f})", fontsize=14, weight='bold')
-axes[7].set_xlabel("Average Price (EUR)", fontsize=12)
-axes[7].set_ylabel("Total Sales Volume", fontsize=12)
+    # --- Q7: Sales Volume by Country & Price Segment (portrait, legend to right) ---
+    fig, ax = plt.subplots(figsize=(8.5, 11))
+    melted = segment_country_sales.reset_index().melt(
+        id_vars='country_code', var_name='price_segment', value_name='sales_volume')
+    melted['price_segment'] = pd.Categorical(melted['price_segment'],
+                                             categories=labels, ordered=True)
+    sns.barplot(x='country_code', y='sales_volume', hue='price_segment',
+                data=melted, palette='tab10', ax=ax)
+    ax.set_title("Q7: Sales Volume by Country & Price Segment", fontsize=16, fontweight='bold')
+    ax.set_xlabel("Country Code"); ax.set_ylabel("Sales Volume")
 
-# --- Question 9: Price Distribution of Deadstock vs. Active Models ---
-# Visualization: Box Plot to compare price distributions
-# Combine deadstock and active prices into a single DataFrame for plotting
-deadstock_df = pd.DataFrame({'price': deadstock_prices, 'status': 'Deadstock'})
-active_df = pd.DataFrame({'price': active_prices, 'status': 'Active'})
-combined_prices_df = pd.concat([deadstock_df, active_df])
+    # Legend: half size, lower, to the right under the title
+    ax.legend(
+        title='Price Segment', loc='upper right', bbox_to_anchor=(1.0, 0.88),
+        fontsize=8, title_fontsize=9, frameon=True
+    )
 
-sns.boxplot(x='status', y='price', data=combined_prices_df, ax=axes[8], palette='Set2')
-axes[8].set_title("Question 9: Price Distribution by Model Status", fontsize=14, weight='bold')
-axes[8].set_xlabel("Model Status", fontsize=12)
-axes[8].set_ylabel("Average Price (EUR)", fontsize=12)
+    plt.subplots_adjust(left=0.12, right=0.96, top=0.86, bottom=0.12)
+    pdf.savefig(fig); plt.close(fig)
 
+    # --- Q8: Price vs Total Sales (portrait) ---
+    fig, ax = plt.subplots(figsize=(8.5, 11))
+    sns.regplot(x='avg_price_eur', y='total_sales', data=correlation_df,
+                scatter_kws={'alpha':0.6}, line_kws={'color':'red','linestyle':'--'}, ax=ax)
+    ax.set_title(f"Q8: Price vs Total Sales (Corr={correlation:.2f})",
+                 fontsize=16, fontweight='bold')
+    ax.set_xlabel("Average Price (EUR)"); ax.set_ylabel("Total Sales Volume")
+    plt.subplots_adjust(left=0.12, right=0.96, top=0.90, bottom=0.12)
+    pdf.savefig(fig); plt.close(fig)
 
-# Adjust layout to prevent overlapping titles/labels and show the plot
-plt.tight_layout(rect=[0, 0.03, 1, 0.98]) # Adjust rect to make space for the main suptitle
-plt.show()
+    # --- Q9: Price Distribution by Model Status (portrait) ---
+    fig, ax = plt.subplots(figsize=(8.5, 11))
+    deadstock_df = pd.DataFrame({'price':deadstock_prices,'status':'Deadstock'})
+    active_df   = pd.DataFrame({'price':active_prices,  'status':'Active'})
+    combined    = pd.concat([deadstock_df, active_df])
+    sns.boxplot(x='status', y='price', data=combined, palette='Set2', ax=ax)
+    ax.set_title("Q9: Price Distribution by Model Status", fontsize=16, fontweight='bold')
+    ax.set_xlabel("Model Status"); ax.set_ylabel("Average Price (EUR)")
+    plt.subplots_adjust(left=0.12, right=0.96, top=0.90, bottom=0.12)
+    pdf.savefig(fig); plt.close(fig)
+
+print(f"✅ PDF report generated: {pdf_path}")
