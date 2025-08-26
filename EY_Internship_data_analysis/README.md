@@ -55,7 +55,7 @@ Analysis covers three main themes:
 ---
 
 ## Visualizations
-The analysis produces a **3×3 grid of plots**, covering all nine key questions. Examples include:
+The analysis produces a **pdf of plots**, covering all nine key questions. Examples include:
 
 - Horizontal bar charts for **top/bottom shoe models**.  
 - Comparative bar plots for **deadstock vs. active models**.  
