@@ -32,7 +32,7 @@ This repository instead showcases the **reporting and orchestration layer** I bu
 
 ## Example Workflow  
 1. Define tests with Pytest markers (not included here due to sensitivity).  
-2. Specify in `test_selection.txt` or select tests to run using:
+2. Specify tests in `test_selection.txt` or select tests to run using:
    
    ```bash
    pytest -m "marker_name" --html=report.html
