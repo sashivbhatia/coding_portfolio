@@ -9,15 +9,16 @@ The goal of these projects is to learn new libraries, experiment with innovative
 ## 📂 Projects  
 
 1. Bowls!
-- **Objective:** [Short description of the project’s purpose or effect.]  
+- **Objective:** Track the motion of bowls in video footage by detecting, following, and labeling each object across frames.  
 - **Key Concepts:**  
-  - [Concept/Library/Technique used]  
-  - [Concept/Library/Technique used]  
-  - [Concept/Library/Technique used]  
+  - Object detection and contour filtering in HSV color space  
+  - Kalman filter–based motion prediction and Hungarian algorithm for assignment  
+  - Trail visualization and unique ID labeling for tracked objects
 
 2. Bubbles and Ripples!
-- **Objective:** [Short description of the project’s purpose or effect.]  
+- **Objective:** Detect bubbles in video footage and add expanding ripple effects that interact and disappear upon collision
 - **Key Concepts:**  
-  - [Concept/Library/Technique used]  
-  - [Concept/Library/Technique used]  
-  - [Concept/Library/Technique used]  
+  - Bubble detection with OpenCV’s Hough Circle Transform  
+  - Object lifecycle management and collision handling for ripple animations  
+  - Video frame processing, overlay rendering, and exporting enhanced videos
+  - Video transformations for performance optimization
