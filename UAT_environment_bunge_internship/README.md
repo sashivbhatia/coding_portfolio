@@ -25,7 +25,6 @@ This repository instead showcases the **reporting and orchestration layer** I bu
   - Extends Pytest hooks (`pytest_html_*`, `pytest_configure`, `pytest_runtest_makereport`) to enrich output.  
 
 ## Tech Stack  
-- **Python**  
 - **Pytest** + `pytest-html`  
 - **OpenPyXL** for Excel reporting  
 - **Base64** encoding for embedding downloadable files into reports  
