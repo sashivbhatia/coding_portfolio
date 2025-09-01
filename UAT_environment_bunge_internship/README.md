@@ -34,6 +34,8 @@ This repository instead showcases the **reporting and orchestration layer** I bu
 1. Define tests with Pytest markers (not included here due to sensitivity).  
 2. Select tests to run:  
    ```bash
+   pytest -m "marker_name" --html=report.html
+   
    or specify in `test_selection.txt`.
 
 ### 3. View results:
