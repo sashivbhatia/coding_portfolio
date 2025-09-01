@@ -32,13 +32,12 @@ This repository instead showcases the **reporting and orchestration layer** I bu
 
 ## Example Workflow  
 1. Define tests with Pytest markers (not included here due to sensitivity).  
-2. Select tests to run:  
+2. Specify in `test_selection.txt` or select tests to run using:
+   
    ```bash
    pytest -m "marker_name" --html=report.html
-   
-   or specify in `test_selection.txt`.
-
-### 3. View results:
+  
+3. View results:
 - Open the HTML report for an interactive summary.  
 - Download the Excel report directly from within the HTML.  
 
