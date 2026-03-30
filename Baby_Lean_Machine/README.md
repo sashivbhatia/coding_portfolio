@@ -14,3 +14,7 @@ I built a baby version of the LeanGCD feedback loop running entirely on my MacBo
 2. After each tactic, the Lean compiler checks if what's been written so far is already broken
 3. If it is, generation aborts immediately and the error is fed back as context
 4. The model retries up to 5 times with increasing error context
+
+## Acknowledgement
+
+I used AI to help code sections of this script and understand the project as I went.
