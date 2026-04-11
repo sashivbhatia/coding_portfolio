@@ -1,11 +1,11 @@
 # Probabilistic Modeling of Housie (Bingo) Games  
 ---
-This project simulates and analyzes the game of **Housie** (also known as Bingo) using Python.  
+- This project simulates and analyzes the game of **Housie** (also known as Bingo) using Python.  
 The model estimates the distribution of the number of turns required for the **first player** to complete their ticket and applies statistical tools to calculate probabilities and visualize outcomes.  
 ---
 ## 📖 Overview  
-The game of Housie involves players with tickets filled with numbers between 1 and 90. Numbers are drawn randomly without replacement until a ticket is completed.  
-This project models the process with multiple players, runs repeated simulations, and applies statistical analysis to understand the distribution of game lengths.  
+- The game of Housie involves players with tickets filled with numbers between 1 and 90. Numbers are drawn randomly without replacement until a ticket is completed.  
+- This project models the process with multiple players, runs repeated simulations, and applies statistical analysis to understand the distribution of game lengths.  
 ---
 ## ⚙️ Methods  
 - **Ticket Generation:**  
